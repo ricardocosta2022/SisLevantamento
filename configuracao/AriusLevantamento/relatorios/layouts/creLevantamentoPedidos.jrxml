@@ -1,0 +1,962 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="creLevantamentoPedidos" pageWidth="850" pageHeight="595" orientation="Landscape" whenNoDataType="NoDataSection" columnWidth="810" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20">
+	<property name="ireport.zoom" value="1.0000000000000009"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="pIdFornecedor" class="java.lang.String">
+		<parameterDescription><![CDATA[Fornecedor]]></parameterDescription>
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="pIdEmpresa" class="java.lang.Integer">
+		<parameterDescription><![CDATA[Empresa]]></parameterDescription>
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="pdataIniVenda" class="java.lang.String">
+		<parameterDescription><![CDATA[Data Incial Venda]]></parameterDescription>
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="pdataFinVenda" class="java.lang.String">
+		<parameterDescription><![CDATA[Data final venda]]></parameterDescription>
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="pDataIncialCompra" class="java.lang.String">
+		<parameterDescription><![CDATA[Data Inicial Compra]]></parameterDescription>
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="pDataFinalCompra" class="java.lang.String">
+		<parameterDescription><![CDATA[Data Final Compra]]></parameterDescription>
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["C:\\Arius\\AriusLevantamento\\relatorios\\layouts\\"]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[select
+pf.referencia ref,
+pr.id,
+substr(pr.descritivo,1,50) produto1,
+substr(pr.descritivo,31,60)produto2,
+pp.venda,
+ ' ' as sugt,
+ ' ' as sugtforn,
+ (select round(custo,3) from proreg.vw_produtosa_precos pp where pp.id = pr.id and pp.tipo_venda = 1 and pp.estado = 'SP' and politica = 1 ) custo_tabela,
+ (select nvl(sum(scompra),0) from proreg.vw_sugestao_compra where fornecedor = $P{pIdFornecedor} and produto = pr.id and empresa in(2,3,5,1,99,6,4,11,9,8,15,16,17))Sg_total,
+
+ (select 'Sug'||'  '||nvl(sum(scompra),0) from proreg.vw_sugestao_compra where fornecedor = $P{pIdFornecedor} and produto = pr.id and empresa = 1 )sg_gta1,
+ (select 'Sug'||'  '||nvl(sum(scompra),0) from proreg.vw_sugestao_compra where fornecedor = $P{pIdFornecedor} and produto = pr.id and empresa = 2 )sg_crz,
+ (select 'Sug'||'  '||nvl(sum(scompra),0) from proreg.vw_sugestao_compra where fornecedor = $P{pIdFornecedor} and produto = pr.id and empresa = 3 )sg_lor1,
+ (select 'Sug'||'  '||nvl(sum(scompra),0) from proreg.vw_sugestao_compra where fornecedor = $P{pIdFornecedor} and produto = pr.id and empresa = 4 )sg_taub1,
+ (select 'Sug'||'  '||nvl(sum(scompra),0) from proreg.vw_sugestao_compra where fornecedor = $P{pIdFornecedor} and produto = pr.id and empresa = 5 )sg_lor2,
+ (select 'Sug'||'  '||nvl(sum(scompra),0) from proreg.vw_sugestao_compra where fornecedor = $P{pIdFornecedor} and produto = pr.id and empresa = 6 )sg_pinda,
+ (select 'Sug'||'  '||nvl(sum(scompra),0) from proreg.vw_sugestao_compra where fornecedor = $P{pIdFornecedor} and produto = pr.id and empresa = 8 )sg_sjc,
+ (select 'Sug'||'  '||nvl(sum(scompra),0) from proreg.vw_sugestao_compra where fornecedor = $P{pIdFornecedor} and produto = pr.id and empresa = 9 )sg_cacap,
+ (select 'Sug'||'  '||nvl(sum(scompra),0) from proreg.vw_sugestao_compra where fornecedor = $P{pIdFornecedor} and produto = pr.id and empresa = 11 )sg_taub2,
+ (select 'Sug'||'  '||nvl(sum(scompra),0) from proreg.vw_sugestao_compra where fornecedor = $P{pIdFornecedor} and produto = pr.id and empresa = 15 )sg_jac,
+ (select 'Sug'||'  '||nvl(sum(scompra),0) from proreg.vw_sugestao_compra where fornecedor = $P{pIdFornecedor} and produto = pr.id and empresa = 16 )sg_sjcHumel,
+ (select 'Sug'||'  '||nvl(sum(scompra),0) from proreg.vw_sugestao_compra where fornecedor = $P{pIdFornecedor} and produto = pr.id and empresa = 17 )sg_buriti,
+
+ (select qtde_embalageme from proreg.vw_tabela_fornecedor where fornecedor = $P{pIdFornecedor} and produto = pr.id and estado = 'SP')qtde_embalagem,
+
+ (select ped.data from   (select max(datahora_cadastro) data, custo, produto, qtde  from
+ (  select p.id, pi.pedido, pi.produto, p.empresa, p.datahora_cadastro, pi.custo , pi.qtde_entrada qtde
+   from proreg.pedidos_itens pi, proreg.pedidos p
+   where  pi.pedido = p.id and p.fornecedor  = $P{pIdFornecedor} and p.empresa >= $P{pIdEmpresa}  order by p.datahora_cadastro desc)  group by custo, produto, qtde) ped
+   where  ped.produto = pr.id and  rownum = 1 )data_ult_entrada_ped,
+
+   (select ped.custo from
+   (select max(datahora_cadastro) data, custo, produto, qtde  from
+   ( select p.id, pi.pedido, pi.produto, p.empresa, p.datahora_cadastro, pi.custo , pi.qtde_entrada qtde
+   from proreg.pedidos_itens pi, proreg.pedidos p
+   where  pi.pedido = p.id and p.fornecedor  = $P{pIdFornecedor} and p.empresa >= $P{pIdEmpresa} and pi.datahora_entrada is not null order by p.datahora_cadastro desc) group by custo, produto, qtde) ped
+   where ped.produto = pr.id and rownum = 1 )custo_ult_enrada_ped2,
+
+   (select sum(qtde) from( select p.id, trunc(p.datahora_cadastro) data, sum(pi.qtde_entrada) qtde, p.empresa, pi.produto
+   from proreg.pedidos_itens pi, proreg.pedidos p
+   where pi.pedido = p.id and p.datahora_entrega is not null and  pi.datahora_entrada is not null and p.fornecedor = $P{pIdFornecedor}  and  trunc(p.datahora_cadastro) in
+   (select max(trunc(datahora_cadastro)) data
+   from proreg.pedidos where fornecedor = $P{pIdFornecedor} and trunc(datahora_cadastro) between  to_date($P{pdataIniVenda})  and to_date($P{pdataFinVenda})  )
+   group by p.id, trunc(p.datahora_cadastro), p.empresa, pi.produto) where produto = pr.id )  qtdeCompra_ult_entrada_ped,
+
+   (select SUM(qtde) from proreg.vw_ultima_compra where forn =  $P{pIdFornecedor}  and produto = pr.id and empresa >= $P{pIdEmpresa}   and entrada
+   BETWEEN  to_date($P{pDataIncialCompra}) and to_date($P{pDataFinalCompra}) )ultcompra_x,
+
+   (select entrada from proreg.vw_ultima_compra where forn =  $P{pIdFornecedor} and produto = pr.id and empresa in(99,1,16) and entrada in
+   (select max(entrada) from proreg.vw_ultima_compra  where forn =  $P{pIdFornecedor} and produto = pr.id and empresa in(99,1,16)) and rownum = 1)dataultcompra,
+
+   (select round(custo_anterior,3) as custo from proreg.tabela_fornecedor_uf where fornecedor = $P{pIdFornecedor} and produto = pr.id and rownum = 1) custo,
+   (select nvl(sum(estoque_atual),0) from proreg.produtos_estoques where produto = pr.id and estoque not in (7,10,14,199))total,
+
+   (select nvl(sum(qtde),0) from proreg.vendas_diarias where trunc(data) between to_date($P{pdataIniVenda})  and to_date($P{pdataFinVenda})  and produto = pr.id and empresa in(2,3,5,1,99,6,4,11,9,8,15,16,17))vdtotal,
+   (select 'Est'||'  '||nvl(sum(estoque_atual),0) from proreg.produtos_estoques where produto = pr.id and estoque = 2)crz,
+   (select 'Vnd'||'  '||nvl(sum(qtde),0) from proreg.vendas_diarias where trunc(data) between to_date($P{pdataIniVenda})  and to_date($P{pdataFinVenda}) and produto = pr.id and empresa = 2)vdcrz,
+   (select 'Est'||'  '||nvl(sum(estoque_atual),0) from proreg.produtos_estoques where produto = pr.id and estoque = 3)lor1,
+   (select 'Vnd'||'  '||nvl(sum(qtde),0) from proreg.vendas_diarias where trunc(data) between to_date($P{pdataIniVenda})  and to_date($P{pdataFinVenda}) and produto = pr.id and empresa = 3)vdlor1,
+   (select 'Est'||'  '||nvl(sum(estoque_atual),0) from proreg.produtos_estoques where produto = pr.id and estoque = 5)lor2,
+   (select 'Vnd'||'  '||nvl(sum(qtde),0) from proreg.vendas_diarias where trunc(data) between to_date($P{pdataIniVenda})  and to_date($P{pdataFinVenda}) and produto = pr.id and empresa = 5)vdlor2,
+   (select 'Est'||'  '||nvl(sum(estoque_atual),0) from proreg.produtos_estoques where produto = pr.id and estoque = 1)gta1,
+   (select 'Vnd'||'  '||nvl(sum(qtde),0) from proreg.vendas_diarias where trunc(data) between to_date($P{pdataIniVenda})  and to_date($P{pdataFinVenda}) and produto = pr.id and empresa = 1)vdgta1,
+   (select  nvl(sum(estoque_atual),0) from proreg.produtos_estoques where produto = pr.id and estoque = 99)deposito,
+   (select 'Vnd'||'  '||nvl(sum(qtde),0) from proreg.vendas_diarias where trunc(data) between to_date($P{pdataIniVenda})  and to_date($P{pdataFinVenda}) and produto = pr.id and empresa = 99)vddeposito,
+   (select 'Est'||'  '||nvl(sum(estoque_atual),0) from proreg.produtos_estoques where produto = pr.id and estoque = 6)pinda,
+   (select 'Vnd'||'  '||nvl(sum(qtde),0) from proreg.vendas_diarias where trunc(data) between to_date($P{pdataIniVenda})  and to_date($P{pdataFinVenda}) and produto = pr.id and empresa = 6)vdpinda,
+   (select 'Est'||'  '||nvl(sum(estoque_atual),0) from proreg.produtos_estoques where produto = pr.id and estoque = 4)taub,
+   (select 'Vnd'||'  '||nvl(sum(qtde),0) from proreg.vendas_diarias where trunc(data) between to_date($P{pdataIniVenda})  and to_date($P{pdataFinVenda}) and produto = pr.id and empresa = 4)vdtaub,
+   (select 'Est'||'  '||nvl(sum(estoque_atual),0) from proreg.produtos_estoques where produto = pr.id and estoque = 11)taub2,
+   (select 'Vnd'||'  '||nvl(sum(qtde),0) from proreg.vendas_diarias where trunc(data) between to_date($P{pdataIniVenda})  and to_date($P{pdataFinVenda}) and produto = pr.id and empresa = 11)vdtaub2,
+   (select 'Est'||'  '||nvl(sum(estoque_atual),0) from proreg.produtos_estoques where produto = pr.id and estoque = 9)caçp,
+   (select 'Vnd'||'  '||nvl(sum(qtde),0) from proreg.vendas_diarias where trunc(data) between to_date($P{pdataIniVenda})  and to_date($P{pdataFinVenda}) and produto = pr.id and empresa = 9)vdcaçp,
+   (select 'Est'||'  '||nvl(sum(estoque_atual),0) from proreg.produtos_estoques where produto = pr.id and estoque = 8)sjc,
+   (select 'Vnd'||'  '||nvl(sum(qtde),0) from proreg.vendas_diarias where trunc(data) between to_date($P{pdataIniVenda})  and to_date($P{pdataFinVenda}) and produto = pr.id and empresa = 8)vdsjc,
+   (select 'Est'||'  '||nvl(sum(estoque_atual),0) from proreg.produtos_estoques where produto = pr.id and estoque = 15)jac,
+   (select 'Vnd'||'  '||nvl(sum(qtde),0) from proreg.vendas_diarias where trunc(data) between to_date($P{pdataIniVenda})  and to_date($P{pdataFinVenda}) and produto = pr.id and empresa = 15)vdjac,
+   (select 'Est'||'  '||nvl(sum(estoque_atual),0) from proreg.produtos_estoques where produto = pr.id and estoque = 16)sjchumel,
+   (select 'Vnd'||'  '||nvl(sum(qtde),0) from proreg.vendas_diarias where trunc(data) between to_date($P{pdataIniVenda})  and to_date($P{pdataFinVenda}) and produto = pr.id and empresa = 16)vdsjchumel,
+   (select 'Est'||'  '||nvl(sum(estoque_atual),0) from proreg.produtos_estoques where produto = pr.id and estoque = 17)buriti,
+
+   (select 'Vnd'||'  '||nvl(sum(qtde),0) from proreg.vendas_diarias where trunc(data) between to_date($P{pdataIniVenda})  and to_date($P{pdataFinVenda}) and produto = pr.id and empresa = 17)vdburiti
+
+     from proreg.produtos_fornecedor pf,proreg.produtos pr,proreg.produtos_precos pp,proreg.produtos_loja pl where pr.id in
+     (select vd.produto from (select * from proreg.vendas_diarias
+     union all
+     select * from proreg.vendas_diariasm  ) vd where vd.empresa >= $P{pIdEmpresa}  and  trunc(vd.data) between to_date($P{pdataIniVenda})  and to_date($P{pdataFinVenda}) and  vd.tipovenda = 1 )
+     and pf.produto = pr.id  and pp.produto = pr.id  and pp.id = 1 and pl.id = pf.produto and pp.politica =  $P{pIdEmpresa}
+     and pl.politica =   $P{pIdEmpresa} and pf.fornecedor = $P{pIdFornecedor} and pr.status <> 3 order by produto1]]>
+	</queryString>
+	<field name="REF" class="java.lang.String"/>
+	<field name="ID" class="java.math.BigDecimal"/>
+	<field name="PRODUTO1" class="java.lang.String"/>
+	<field name="PRODUTO2" class="java.lang.String"/>
+	<field name="VENDA" class="java.math.BigDecimal"/>
+	<field name="SUGT" class="java.lang.String"/>
+	<field name="SUGTFORN" class="java.lang.String"/>
+	<field name="CUSTO_TABELA" class="java.math.BigDecimal"/>
+	<field name="SG_TOTAL" class="java.math.BigDecimal"/>
+	<field name="SG_GTA1" class="java.lang.String"/>
+	<field name="SG_CRZ" class="java.lang.String"/>
+	<field name="SG_LOR1" class="java.lang.String"/>
+	<field name="SG_TAUB1" class="java.lang.String"/>
+	<field name="SG_LOR2" class="java.lang.String"/>
+	<field name="SG_PINDA" class="java.lang.String"/>
+	<field name="SG_SJC" class="java.lang.String"/>
+	<field name="SG_CACAP" class="java.lang.String"/>
+	<field name="SG_TAUB2" class="java.lang.String"/>
+	<field name="SG_JAC" class="java.lang.String"/>
+	<field name="SG_SJCHUMEL" class="java.lang.String"/>
+	<field name="SG_BURITI" class="java.lang.String"/>
+	<field name="QTDE_EMBALAGEM" class="java.math.BigDecimal"/>
+	<field name="DATA_ULT_ENTRADA_PED" class="java.sql.Timestamp"/>
+	<field name="CUSTO_ULT_ENRADA_PED2" class="java.math.BigDecimal"/>
+	<field name="QTDECOMPRA_ULT_ENTRADA_PED" class="java.math.BigDecimal"/>
+	<field name="ULTCOMPRA_X" class="java.math.BigDecimal"/>
+	<field name="DATAULTCOMPRA" class="java.sql.Timestamp"/>
+	<field name="CUSTO" class="java.math.BigDecimal"/>
+	<field name="TOTAL" class="java.math.BigDecimal"/>
+	<field name="VDTOTAL" class="java.math.BigDecimal"/>
+	<field name="CRZ" class="java.lang.String"/>
+	<field name="VDCRZ" class="java.lang.String"/>
+	<field name="LOR1" class="java.lang.String"/>
+	<field name="VDLOR1" class="java.lang.String"/>
+	<field name="LOR2" class="java.lang.String"/>
+	<field name="VDLOR2" class="java.lang.String"/>
+	<field name="GTA1" class="java.lang.String"/>
+	<field name="VDGTA1" class="java.lang.String"/>
+	<field name="DEPOSITO" class="java.math.BigDecimal"/>
+	<field name="VDDEPOSITO" class="java.lang.String"/>
+	<field name="PINDA" class="java.lang.String"/>
+	<field name="VDPINDA" class="java.lang.String"/>
+	<field name="TAUB" class="java.lang.String"/>
+	<field name="VDTAUB" class="java.lang.String"/>
+	<field name="TAUB2" class="java.lang.String"/>
+	<field name="VDTAUB2" class="java.lang.String"/>
+	<field name="CAÇP" class="java.lang.String"/>
+	<field name="VDCAÇP" class="java.lang.String"/>
+	<field name="SJC" class="java.lang.String"/>
+	<field name="VDSJC" class="java.lang.String"/>
+	<field name="JAC" class="java.lang.String"/>
+	<field name="VDJAC" class="java.lang.String"/>
+	<field name="SJCHUMEL" class="java.lang.String"/>
+	<field name="VDSJCHUMEL" class="java.lang.String"/>
+	<field name="BURITI" class="java.lang.String"/>
+	<field name="VDBURITI" class="java.lang.String"/>
+	<group name="Codigo">
+		<groupExpression><![CDATA[$F{ID}]]></groupExpression>
+		<groupFooter>
+			<band height="75">
+				<rectangle>
+					<reportElement mode="Opaque" x="0" y="0" width="810" height="75" backcolor="#CCFFFF">
+						<printWhenExpression><![CDATA[new Boolean(($V{REPORT_COUNT}.intValue() % 2) != 0)]]></printWhenExpression>
+					</reportElement>
+					<graphicElement>
+						<pen lineWidth="0.0"/>
+					</graphicElement>
+				</rectangle>
+				<textField isBlankWhenNull="true">
+					<reportElement x="50" y="0" width="61" height="14"/>
+					<textElement verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{REF}]]></textFieldExpression>
+				</textField>
+				<textField pattern="dd/MM/yyyy" isBlankWhenNull="true">
+					<reportElement x="539" y="0" width="95" height="14"/>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.sql.Timestamp"><![CDATA[$F{DATAULTCOMPRA}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.00" isBlankWhenNull="true">
+					<reportElement x="457" y="0" width="82" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement verticalAlignment="Middle"/>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{VDTOTAL}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.00" isBlankWhenNull="true">
+					<reportElement x="634" y="0" width="80" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<bottomPen lineWidth="0.0"/>
+					</box>
+					<textElement verticalAlignment="Middle"/>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{CUSTO}]]></textFieldExpression>
+				</textField>
+				<textField pattern="" isBlankWhenNull="true">
+					<reportElement x="377" y="0" width="80" height="14"/>
+					<textElement verticalAlignment="Middle"/>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{TOTAL}]]></textFieldExpression>
+				</textField>
+				<textField pattern="" isBlankWhenNull="true">
+					<reportElement x="714" y="0" width="96" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement verticalAlignment="Middle"/>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{ULTCOMPRA_X}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="111" y="0" width="186" height="14"/>
+					<textElement verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{PRODUTO1}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.00" isBlankWhenNull="true">
+					<reportElement x="297" y="0" width="40" height="14"/>
+					<textElement verticalAlignment="Middle"/>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{VENDA}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.00" isBlankWhenNull="true">
+					<reportElement x="337" y="0" width="40" height="14"/>
+					<textElement verticalAlignment="Middle"/>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{CUSTO_TABELA}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="0" y="0" width="50" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<leftPen lineWidth="0.75"/>
+					</box>
+					<textElement verticalAlignment="Middle"/>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{ID}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="724" y="14" width="86" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Qtde Comprar]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="503" y="14" width="55" height="17"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Jacareí]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="668" y="14" width="55" height="17"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Deposito]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="613" y="14" width="55" height="17"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Buriti]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="446" y="14" width="57" height="17"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Taubaté 2]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="166" y="14" width="55" height="17"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Lorena 2]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="56" y="14" width="55" height="17"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Cruzeiro]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="111" y="14" width="55" height="17"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Lorena 1]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="725" y="28" width="85" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement/>
+					<text><![CDATA[]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="0" y="14" width="55" height="17"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<leftPen lineWidth="0.75"/>
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Guara 1]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="558" y="14" width="55" height="17"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[São Jose 2]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="278" y="14" width="55" height="17"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Pinda]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="333" y="14" width="55" height="17"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[São Jose 1]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="388" y="14" width="58" height="17"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Taubaté 1]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="221" y="14" width="57" height="17"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Caçapava]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="725" y="42" width="85" height="15"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement/>
+					<text><![CDATA[]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="111" y="30" width="55" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{LOR1}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="503" y="30" width="55" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{JAC}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="56" y="30" width="55" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{CRZ}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="166" y="30" width="55" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{LOR2}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="389" y="30" width="57" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{TAUB}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="558" y="30" width="55" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{SJCHUMEL}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="278" y="30" width="55" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{PINDA}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="446" y="30" width="57" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{TAUB2}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="0" y="30" width="55" height="16"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<leftPen lineWidth="0.75"/>
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{GTA1}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="333" y="30" width="55" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{SJC}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="221" y="30" width="57" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{CAÇP}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="668" y="30" width="55" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="613" y="30" width="55" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{BURITI}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="446" y="44" width="57" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{VDTAUB2}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="111" y="44" width="55" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{VDLOR1}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="558" y="44" width="55" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{VDSJCHUMEL}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="503" y="44" width="55" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{VDJAC}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="166" y="44" width="55" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{VDLOR2}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="56" y="44" width="55" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{VDCRZ}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="221" y="44" width="57" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{VDCAÇP}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="668" y="44" width="55" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{DEPOSITO}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="613" y="44" width="55" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{VDBURITI}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="278" y="44" width="55" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{VDPINDA}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="0" y="46" width="55" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<leftPen lineWidth="0.75"/>
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{VDGTA1}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="333" y="44" width="55" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{VDSJC}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="389" y="44" width="57" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{VDTAUB}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="0" y="59" width="55" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<leftPen lineWidth="0.75"/>
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{SG_GTA1}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="56" y="58" width="55" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{SG_CRZ}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="111" y="58" width="55" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{SG_LOR1}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="166" y="58" width="55" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{SG_LOR2}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="221" y="58" width="57" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{SG_CACAP}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="278" y="58" width="55" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{SG_PINDA}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="333" y="58" width="55" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{SG_SJC}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="389" y="58" width="57" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{SG_TAUB1}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="446" y="58" width="57" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{SG_TAUB2}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="503" y="58" width="55" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{SG_JAC}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="558" y="58" width="55" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{SG_SJCHUMEL}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="613" y="58" width="55" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{SG_BURITI}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="668" y="58" width="55" height="14"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="792" y="57" width="18" height="15"/>
+					<box topPadding="2" leftPadding="2" rightPadding="2">
+						<rightPen lineWidth="0.75"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{SUGT}]]></textFieldExpression>
+				</textField>
+				<line>
+					<reportElement x="0" y="73" width="809" height="1"/>
+				</line>
+			</band>
+		</groupFooter>
+	</group>
+	<title>
+		<band height="89" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="0" width="724" height="40"/>
+				<box topPadding="2" leftPadding="2" rightPadding="2">
+					<topPen lineWidth="0.75"/>
+					<leftPen lineWidth="0.75"/>
+					<bottomPen lineWidth="0.75"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Levantamento de Fornecedor]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="514" y="49" width="128" height="20"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Periodo de Compras:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="514" y="69" width="128" height="20"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Periodo de Vendas:...]]></text>
+			</staticText>
+			<textField pattern="dd/MM/yyyy" isBlankWhenNull="true">
+				<reportElement x="642" y="49" width="67" height="20"/>
+				<textElement verticalAlignment="Top"/>
+				<textFieldExpression class="java.lang.String"><![CDATA[$P{pDataIncialCompra}]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd/MM/yyyy" isBlankWhenNull="true">
+				<reportElement x="710" y="49" width="76" height="20"/>
+				<textElement verticalAlignment="Top"/>
+				<textFieldExpression class="java.lang.String"><![CDATA[$P{pDataFinalCompra}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="699" y="49" width="7" height="20"/>
+				<textElement verticalAlignment="Top"/>
+				<text><![CDATA[à]]></text>
+			</staticText>
+			<textField pattern="dd/MM/yyyy" isBlankWhenNull="true">
+				<reportElement x="642" y="69" width="67" height="20"/>
+				<textElement verticalAlignment="Top"/>
+				<textFieldExpression class="java.lang.String"><![CDATA[$P{pdataIniVenda}]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd/MM/yyyy" isBlankWhenNull="true">
+				<reportElement x="710" y="69" width="76" height="20"/>
+				<textElement verticalAlignment="Top"/>
+				<textFieldExpression class="java.lang.String"><![CDATA[$P{pdataFinVenda}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="699" y="69" width="7" height="20"/>
+				<textElement/>
+				<text><![CDATA[à]]></text>
+			</staticText>
+			<subreport>
+				<reportElement x="1" y="40" width="513" height="49"/>
+				<subreportParameter name="pIdFornecedor">
+					<subreportParameterExpression><![CDATA[$P{pIdFornecedor}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression class="java.lang.String"><![CDATA[$P{SUBREPORT_DIR} + "subcreLevantamentovendidos.jasper"]]></subreportExpression>
+			</subreport>
+			<textField pattern="dd/MM/yyyy">
+				<reportElement x="726" y="0" width="84" height="20"/>
+				<box topPadding="0" leftPadding="0" rightPadding="0">
+					<topPen lineWidth="0.75"/>
+					<bottomPen lineWidth="0.0"/>
+					<rightPen lineWidth="0.75"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.util.Date"><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<textField pattern="HH.mm.ss">
+				<reportElement x="726" y="20" width="84" height="20"/>
+				<box topPadding="0" leftPadding="0" rightPadding="0">
+					<topPen lineWidth="0.0"/>
+					<bottomPen lineWidth="0.75"/>
+					<rightPen lineWidth="0.75"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.util.Date"><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<columnHeader>
+		<band height="17" splitType="Stretch">
+			<staticText>
+				<reportElement x="377" y="0" width="80" height="17"/>
+				<box topPadding="2" leftPadding="2" rightPadding="2">
+					<topPen lineWidth="0.75"/>
+					<bottomPen lineWidth="0.75"/>
+				</box>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Estoque Atual]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="50" y="0" width="61" height="17"/>
+				<box topPadding="2" leftPadding="2" rightPadding="2">
+					<topPen lineWidth="0.75"/>
+					<bottomPen lineWidth="0.75"/>
+				</box>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Ref]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="457" y="0" width="82" height="17"/>
+				<box topPadding="2" leftPadding="2" rightPadding="2">
+					<topPen lineWidth="0.75"/>
+					<bottomPen lineWidth="0.75"/>
+					<rightPen lineWidth="0.0"/>
+				</box>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Venda Periodo]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="1" y="0" width="49" height="17"/>
+				<box topPadding="2" leftPadding="2" rightPadding="2">
+					<topPen lineWidth="0.75"/>
+					<leftPen lineWidth="0.75"/>
+					<bottomPen lineWidth="0.75"/>
+				</box>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Código]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="297" y="0" width="40" height="17"/>
+				<box topPadding="2" leftPadding="2" rightPadding="2">
+					<topPen lineWidth="0.75"/>
+					<bottomPen lineWidth="0.75"/>
+				</box>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Venda]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="111" y="0" width="186" height="17"/>
+				<box topPadding="2" leftPadding="2" rightPadding="2">
+					<topPen lineWidth="0.75"/>
+					<bottomPen lineWidth="0.75"/>
+				</box>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Produto]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="337" y="0" width="40" height="17"/>
+				<box topPadding="2" leftPadding="2" rightPadding="2">
+					<topPen lineWidth="0.75"/>
+					<bottomPen lineWidth="0.75"/>
+				</box>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Custo]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="539" y="0" width="95" height="17"/>
+				<box topPadding="2" leftPadding="2" rightPadding="2">
+					<topPen lineWidth="0.75"/>
+					<bottomPen lineWidth="0.75"/>
+					<rightPen lineWidth="0.0"/>
+				</box>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Data Ult. Compra]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="714" y="0" width="96" height="17"/>
+				<box topPadding="2" leftPadding="2" rightPadding="2">
+					<topPen lineWidth="0.75"/>
+					<bottomPen lineWidth="0.75"/>
+					<rightPen lineWidth="0.75"/>
+				</box>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Qtde Ult. Compra]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="634" y="0" width="80" height="17"/>
+				<box topPadding="2" leftPadding="2" rightPadding="2">
+					<topPen lineWidth="0.75"/>
+					<bottomPen lineWidth="0.75"/>
+					<rightPen lineWidth="0.0"/>
+				</box>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Valor Ult Comp]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<noData>
+		<band height="18">
+			<staticText>
+				<reportElement x="0" y="0" width="810" height="18"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" isBold="true" pdfFontName="Times-Bold"/>
+				</textElement>
+				<text><![CDATA[A consulta retornou sem resultado.]]></text>
+			</staticText>
+		</band>
+	</noData>
+</jasperReport>

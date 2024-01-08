@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="C:/eclipse/libs/tomcat-dbcp.jar"/>
+	<classpathentry kind="lib" path="C:/eclipse/libs/ojdbc6.jar"/>
+	<classpathentry kind="lib" path="C:/eclipse/libs/Jasper reports/commons-beanutils-1.8.0.jar"/>
+	<classpathentry kind="lib" path="C:/eclipse/libs/Jasper reports/commons-collections-3.1.jar"/>
+	<classpathentry kind="lib" path="C:/eclipse/libs/Jasper reports/commons-digester-1.7.jar"/>
+	<classpathentry kind="lib" path="C:/eclipse/libs/Jasper reports/commons-javaflow-20060411.jar"/>
+	<classpathentry kind="lib" path="C:/eclipse/libs/Jasper reports/commons-logging.jar"/>
+	<classpathentry kind="lib" path="C:/eclipse/libs/Jasper reports/groovy-all-1.7.5.jar"/>
+	<classpathentry kind="lib" path="C:/eclipse/libs/Jasper reports/itext-2.1.7.js2.jar"/>
+	<classpathentry kind="lib" path="C:/eclipse/libs/Jasper reports/poi-3.6-20091214.jar"/>
+	<classpathentry kind="lib" path="C:/eclipse/libs/Jasper reports/jasperreports-5.6.0.jar"/>
+	<classpathentry kind="lib" path="C:/eclipse/libs/Jasper reports/jasperreports-applet-5.6.0.jar"/>
+	<classpathentry kind="lib" path="C:/eclipse/libs/Jasper reports/jasperreports-fonts-5.6.0.jar"/>
+	<classpathentry kind="lib" path="C:/eclipse/libs/Jasper reports/barbecue-1.5-beta1.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

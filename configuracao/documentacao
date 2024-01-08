@@ -1,0 +1,25 @@
+
+
+
+CREATE OR REPLACE VIEW cre_vi_ultimas_compras (
+   datahora_entrada,
+   qtde_entrada,
+   produto,
+   pedido,
+   nf,
+   empresa, 
+   fornecedor )
+AS
+select distinct
+  pedidos_itens.datahora_entrada,
+  pedidos_itens.qtde_entrada,
+  pedidos_itens.produto,
+  pedidos_itens.pedido,
+  pedidos_itens.nf,
+  pedidos.empresa,
+  pedidos.fornecedor
+from
+  pedidos_itens, pedidos
+where
+  pedidos_itens.pedido = pedidos.id
+  and (pedidos_itens.datahora_entrada is not null)
